@@ -67,8 +67,7 @@ The circuit consists of:
 ---
 
 ## 🧱 Code
-[The full Arduino code is located in:  
-**`/source/IOT_Energy_Monitoring.ino`** (or paste in main folder depending on repo)](https://github.com/Hari140126/IOT-Based-energy-monitoring-system/blob/main/CODE)
+(https://github.com/Hari140126/IOT-Based-energy-monitoring-system/blob/main/CODE)
 
 ---
 
