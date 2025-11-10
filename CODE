@@ -1,0 +1,187 @@
+#include <LiquidCrystal.h>
+
+//for LCD1
+const int rs_1 = 8, en_1 = 9, d4_1 = 10, d5_1 = 11, d6_1 = 12, d7_1 = 13;
+LiquidCrystal lcd_1(rs_1, en_1, d4_1, d5_1, d6_1, d7_1);
+//for LCD2 
+const int rs_2 = A4, en_2 = 3, d4_2 = 4, d5_2 = 5, d6_2 = 6, d7_2 = 7;
+LiquidCrystal lcd_2(rs_2, en_2, d4_2, d5_2, d6_2, d7_2);
+
+int buttondisp = 2;
+int butt1 = A0;
+int butt2 = A1;
+int buzzer = A5;
+int dispstate = 0;
+int displimit = 3;
+int prevval = 0;
+
+float voltage_240 = 240.00;
+float current_240 = 20.00;
+float pf_max1 = 1.00;
+float wattage_240;
+float voltage_220 = 220.00;
+float current_220 = 20.00;
+float pf_max2 = 1.00;
+float wattage_220;
+float voltage_24 = 24.00;
+float current_24 = 20.00;
+float wattage_24;
+float battvoltage = 12.05;
+float totalloadwatt;
+float chargetargert = 13.6;	
+
+String battstat;
+
+void setup()
+{
+  Serial.begin(9600);
+  lcd_1.begin(16,2);
+  lcd_2.begin(16,2);
+  attachInterrupt(digitalPinToInterrupt(buttondisp), dotoggledisp, RISING);
+  pinMode(butt1, INPUT);
+  pinMode(butt2, INPUT);
+  pinMode(buzzer, OUTPUT);
+}
+
+void loop()
+{
+  wattage_240 = voltage_240 * current_240 * pf_max1;
+  wattage_220 = voltage_220 * current_220 * pf_max2;
+  wattage_24 = voltage_24 * current_24;
+  
+  totalloadwatt = wattage_220 + wattage_24;
+  
+  if(battvoltage <= 12.20)
+  {
+    battstat = "Charging...";
+  }
+  else if(battvoltage >= chargetargert)
+  {
+    battstat = "Charged!";
+  }
+  lcd_1.clear();
+  lcd_2.clear();
+  noTone(buzzer);
+  if(digitalRead(butt1) == HIGH)
+  {
+    lcd_1.setCursor(4,0);
+    lcd_1.print("Warning!");
+    lcd_1.setCursor(0,1);
+    lcd_1.print("the power factor");
+    lcd_2.setCursor(0,0);
+    lcd_2.print("is reaching low");
+    lcd_2.setCursor(0,1);
+    lcd_2.print("levels.");
+    tone(buzzer,1000);
+  }
+  else if(digitalRead(butt2) == HIGH)
+  {
+    lcd_1.setCursor(4,0);
+    lcd_1.print("Warning!");
+    lcd_1.setCursor(2,1);
+    lcd_1.print("Your wattage");
+    lcd_2.setCursor(1,0);
+    lcd_2.print("consumption is");
+    lcd_2.setCursor(3,1);
+    lcd_2.print("80% !");
+    tone(buzzer,1000);
+  }
+  else if(digitalRead(butt1) == LOW || digitalRead(butt2) == LOW)
+  { 
+  	switch(dispstate)
+  	{
+    	case 0:
+    	lcd_1.setCursor(0,0);
+    	lcd_1.print("D1");
+    	lcd_1.setCursor(5,0);
+    	lcd_1.print(voltage_240);
+    	lcd_1.setCursor(12,0);
+    	lcd_1.print("V ac");
+    	lcd_1.setCursor(6,1);
+    	lcd_1.print(current_240);
+    	lcd_1.setCursor(12,1);
+    	lcd_1.print("Amps");
+    
+    	lcd_2.setCursor(5,0);
+    	lcd_2.print("pf : ");
+    	lcd_2.print(pf_max1);
+    	lcd_2.setCursor(5,1);
+    	lcd_2.print(wattage_240);
+    	lcd_2.setCursor(13,1);
+    	lcd_2.print("W");
+    	break;
+    
+    	case 1:
+    	lcd_1.setCursor(0,0);
+    	lcd_1.print("D2");
+    	lcd_1.setCursor(5,0);
+    	lcd_1.print(voltage_220);
+    	lcd_1.setCursor(12,0);
+    	lcd_1.print("V ac");
+    	lcd_1.setCursor(6,1);
+    	lcd_1.print(current_220);
+    	lcd_1.setCursor(12,1);
+    	lcd_1.print("Amps");
+    
+    	lcd_2.setCursor(5,0);
+    	lcd_2.print("pf : ");
+    	lcd_2.print(pf_max2);
+    	lcd_2.setCursor(5,1);
+    	lcd_2.print(wattage_220);
+    	lcd_2.setCursor(13,1);
+    	lcd_2.print("W");
+    	break;
+    
+    	case 2:
+    	lcd_1.setCursor(0,0);
+    	lcd_1.print("D3");
+    	lcd_1.setCursor(6,0);
+    	lcd_1.print(voltage_24);
+    	lcd_1.setCursor(12,0);
+    	lcd_1.print("V dc");
+    	lcd_1.setCursor(6,1);
+    	lcd_1.print(current_24);
+    	lcd_1.setCursor(12,1);
+    	lcd_1.print("Amps");
+    
+    	lcd_2.setCursor(5,0);
+    	lcd_2.print(wattage_24);
+    	lcd_2.setCursor(13,0);
+    	lcd_2.print("W");
+    	break;
+    
+    	case 3:
+    	lcd_1.setCursor(0,0);
+    	lcd_1.print("D4");
+    	lcd_1.setCursor(5,0);
+    	lcd_1.print("Batt. Stat.");
+    	lcd_1.setCursor(5,1);
+    	lcd_1.print(battstat);
+    
+    	lcd_2.setCursor(5,0);
+    	lcd_2.print(battvoltage);
+    	lcd_2.setCursor(12,0);
+    	lcd_2.print("V dc");
+    	break;
+  	}
+  	if(prevval<dispstate)
+  	{
+    	lcd_1.clear();
+    	lcd_2.clear();
+    	prevval = dispstate;
+  	}
+  }
+  delay(500); //just to make the display not blink
+}
+
+void dotoggledisp()
+{
+  dispstate++;
+  if (dispstate > displimit)
+  {
+    dispstate = 0;
+    prevval = 0;
+    lcd_1.clear();
+    lcd_2.clear();
+  }
+}
